@@ -47,6 +47,8 @@ function initUI() {
 }
 
 function onSelected(val) {
+  refs.catInfoEl.classList.add('is-hidden');
+
   const { id, value } = val[0];
 
   if (value === 'none') {
@@ -65,7 +67,10 @@ function onSelected(val) {
       console.log(err);
       errorShow();
     })
-    .finally(() => refs.loaderEl.classList.remove('show'));
+    .finally(() => {
+      refs.loaderEl.classList.remove('show');
+      refs.catInfoEl.classList.remove('is-hidden');
+    });
 }
 
 function errorShow() {

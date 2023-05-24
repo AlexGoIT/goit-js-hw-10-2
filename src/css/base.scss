@@ -2,6 +2,11 @@ body {
   padding: 20px;
 }
 
+img {
+  box-sizing: border-box;
+  display: block;
+}
+
 .is-hidden {
   display: none;
 }

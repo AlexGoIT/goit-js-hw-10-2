@@ -5,11 +5,13 @@ export function createBreedInfoMarkup(data) {
   const breedTemp = data[1].data.temperament;
 
   return `
-  <img src="${breedImgURL}" alt="${breedName}" width="240" />  
-  <div class="descript-wrap">
-    <h2>${breedName}</h2>
-    <p><span class="descript">Description: </span>${breedDesc}</p>
-    <p><span class="descript">Temperament: </span>${breedTemp}</p>
+  <div class="breed-info-container">
+    <img src="${breedImgURL}" alt="${breedName}" width="240" />  
+    <div class="descript-wrap">
+      <h2>${breedName}</h2>
+      <p><span class="descript">Description: </span>${breedDesc}</p>
+      <p><span class="descript">Temperament: </span>${breedTemp}</p>
+    </div>
   </div>
   `;
 }
