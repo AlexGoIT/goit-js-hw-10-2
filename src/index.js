@@ -1,102 +1,77 @@
-import Notiflix from 'notiflix';
-import debounce from 'lodash.debounce';
+import { Notify } from 'notiflix';
+import SlimSelect from 'slim-select';
+import { fetchBreeds, fetchCatByBreed } from './js/cat-api.js';
+import { createBreedInfoMarkup } from './js/create-breed-info-markup.js';
 
-import './css/styles.css';
-import { fetchCountries } from './js/fetchCountries';
-
-const DEBOUNCE_DELAY = 300;
+const slimSelect = new SlimSelect({
+  select: '.breed-select',
+  settings: { placeholder: true, text: 'placeholder text' },
+  events: {
+    afterChange: onSelected,
+  },
+});
 
 const refs = {
-  searchInput: document.querySelector('#search-box'),
-  countryListContainer: document.querySelector('.country-list'),
-  countryInfoContainer: document.querySelector('.country-info'),
+  breedSelectEl: document.querySelector('.breed-select'),
+  catInfoEl: document.querySelector('.cat-info'),
+  loaderEl: document.querySelector('.loader'),
+  errorEl: document.querySelector('.error'),
 };
 
-refs.searchInput.addEventListener('input', debounce(search, DEBOUNCE_DELAY));
+refs.errorEl.classList.add('is-hidden');
+refs.loaderEl.classList.remove('show');
 
-function search({ target: { value } }) {
-  const countryName = value.trim();
+function initUI() {
+  refs.loaderEl.classList.add('show');
 
-  if (!countryName) {
-    resetUI();
+  fetchBreeds()
+    .then(res => {
+      const breedList = res.data.map(item => {
+        return { id: item.id, text: item.name };
+      });
+
+      breedList.unshift({
+        placeholder: true,
+        value: 'none',
+        text: 'make your selection',
+      });
+
+      slimSelect.setData(breedList);
+      refs.breedSelectEl.innerHTML = breedList;
+    })
+    .catch(err => {
+      console.log(err);
+      errorShow();
+    })
+    .finally(() => refs.loaderEl.classList.remove('show'));
+}
+
+function onSelected(val) {
+  const { id, value } = val[0];
+
+  if (value === 'none') {
     return;
   }
 
-  fetchCountries(countryName).then(renderData).catch(statusError);
+  refs.loaderEl.classList.add('show');
+  const fetchImg = fetchCatByBreed(id);
+  const fetchInfo = fetchBreeds(id);
+
+  Promise.all([fetchImg, fetchInfo])
+    .then(value => {
+      refs.catInfoEl.innerHTML = createBreedInfoMarkup(value);
+    })
+    .catch(err => {
+      console.log(err);
+      errorShow();
+    })
+    .finally(() => refs.loaderEl.classList.remove('show'));
 }
 
-// Render data
-function renderData(countryList) {
-  if (countryList.length > 10) {
-    Notiflix.Notify.info(
-      'Too many matches found. Please enter a more specific name.'
-    );
-    return;
-  }
-
-  if (countryList.length > 1) {
-    resetUI();
-
-    refs.countryListContainer.insertAdjacentHTML(
-      'beforeend',
-      createCountryListMarkup(countryList)
-    );
-  } else {
-    resetUI();
-
-    refs.countryInfoContainer.insertAdjacentHTML(
-      'beforeend',
-      createCountryInfoMarkup(countryList[0])
-    );
-  }
+function errorShow() {
+  Notify.failure('Oops! Something went wrong! Try reloading the page!');
 }
 
-// Status error
-function statusError() {
-  resetUI();
-  Notiflix.Notify.failure('Oops, there is no country with that name.');
-}
-
-// Reset the UI
-function resetUI() {
-  refs.countryListContainer.innerHTML = '';
-  refs.countryInfoContainer.innerHTML = '';
-}
-
-// Generate a markup for a given country's list.
-function createCountryListMarkup(countryList) {
-  return countryList
-    .map(
-      ({ name: { official }, flags: { svg } }) =>
-        `
-      <li class="country-item" data-country="${official}">
-        <img src="${svg}" alt="${official}" width="50" />
-        <p class="country-name">${official}</p>
-      </li>
-      `
-    )
-    .join('');
-}
-
-// Generate a markup for a given country's information.
-function createCountryInfoMarkup({
-  name: { official },
-  capital,
-  population,
-  flags: { svg },
-  languages,
-}) {
-  return `
-    <div class="country-info-title">
-      <img src="${svg}" alt="${official}" width="50" />
-      <p class="country-info-name">${official}</p>
-    </div>
-      <ul class="country-info-list">
-        <li class="country-info-item"><span class="card-field-name">Capital: </span>${capital}</li>
-        <li class="country-info-item"><span class="card-field-name">Population: </span>${population}</li>
-        <li class="country-info-item"><span class="card-field-name">Languages: </span>${Object.values(
-          languages
-        ).join(', ')}</li>
-      </ul>
-    `;
-}
+window.onload = () => {
+  initUI();
+};

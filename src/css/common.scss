@@ -1,0 +1,19 @@
+@import '~node_modules/modern-normalize/modern-normalize.css';
+
+body {
+  margin: 0;
+}
+
+ul,
+p,
+h1,
+h2 {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+}
