@@ -48,6 +48,7 @@ function initUI() {
 
 function onSelected(val) {
   refs.catInfoEl.classList.add('is-hidden');
+  refs.catInfoEl.innerHTML = '';
 
   const { id, value } = val[0];
 
